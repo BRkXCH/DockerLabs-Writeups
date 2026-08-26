@@ -7,8 +7,8 @@
 Se inicio con un escaneo completo de puertos TCP con deteccion de servicios y scripts por defecto:
 	
 	$nmap -p- --open -sS -sC -sV 172.17.0.2 -n -Pn
-
-
+![Nmap Scan](/img/nmapScanShot_trust.png)
+	
 #### Puertos descubiertos:
 - **22/tcp** *(OpenSSH)*
 - **80/tcp** *(Apache httpd)*
@@ -16,17 +16,21 @@ Se inicio con un escaneo completo de puertos TCP con deteccion de servicios y sc
 Al navegar a *http://172.17.0.2/*, se observo la pagina por defecto de Apache2. Se procedio al descubrimiento de rutas ocultas mediante Gobuster, filtrando respuestas wildcard por tamaño:
 
     $ gobuster dir -u http://172.17.0.2 -w /usr/share/wordlists/directory-lists-2.3-small.txt -x php,html,txt --exclude-length 10701 -t 30
+![Gobuster Shot](/img/gobusterShot_trust.png)
     
 #### Resultado:
 - **Ruta descubierta:** *http:172.17.0.2/secret.php* (status 200, size 927).
 - Al inspeccionar el contenido de *secret.php*, se identifico el mensaje:
-> "Hola Mario, esta web no se puede hackear"
+<p align="left">
+	<img src="/img/secretPhp_trust.png" width="20%">
+</p>
 
 - Esto revelo un nombre de usuario potencial en el sistema: *mario*.
 ### Acceso Inicial
 Con el usuario identificado y el puerto 22 abierto, se ejecuto un ataque de fuerza bruta con Hydra y el diccionario rockyou:
 
     $ hydra -l mario -P /usr/share/wordlists/rockyou.txt ssh://172.17.0.2 -t 16 -f -V
+![Hydra BruteForce](/img/hydraBFShot_trust.png)
 
 #### Credenciales Obtenidas:
 - **Usuario**: *mario*
@@ -34,20 +38,23 @@ Con el usuario identificado y el puerto 22 abierto, se ejecuto un ataque de fuer
 #### Conexion Exitosa por SSH:
 
     $ ssh mario@172.17.0.2
+	
 ### Escalado de Privilegios
  Una vez dentro de la sesion de mario, se comprobaron los privilegios de sudo asignados al usuario:
  
-
     $ sudo -l
+	
 #### Salida Relevante:
-El binario /usr/bin/vin puede ejecutarse con permisos de superusuario sin contraseña.
+El binario /usr/bin/vim puede ejecutarse con permisos de superusuario sin contraseña.
+![SSH Connection](/img/sshShot_trust.png)
 
 ### Explotacion (GTFOBins)
-Se utilizo el escape interactivo de Vim para invocar una shell como root:
+Se utilizo el escape interactivo de vim para invocar una shell como root:
 
     $ sudo vim -c ':!/bin/sh'
 
 Comprobacion de privilegios:
+![Vim Flag](/img/vimShot_trust.png)
 
 
 
