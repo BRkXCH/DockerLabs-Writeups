@@ -7,7 +7,7 @@
 ### Reconocimiento y Escaneo de Puertos
 Se inició con un escaneo de puertos TCP sobre el objetivo:
 
-    $ map -p- --open -sS -sC -sV 172.17.0.2 -n -Pn
+    $ nmap -p- --open -sS -sC -sV 172.17.0.2 -n -Pn
 ![Nmap Scan](img/nmapScan.png)
     
 #### Puertos Descubiertos:
@@ -17,7 +17,7 @@ Se inició con un escaneo de puertos TCP sobre el objetivo:
 ### Enumeración Web
 Se inició la fase de reconocimiento web realizando fuzzing de directorios y archivos sobre ambos puertos utilizando *Gobuster*:
 
-    $ obuster dir -u http://172.17.0.2 -w /usr/share/wordlists/directory-lists-2.3-small.txt -x php,html,txt --exclude-length 10701 -t 30
+    $ gobuster dir -u http://172.17.0.2 -w /usr/share/wordlists/directory-lists-2.3-small.txt -x php,html,txt --exclude-length 10701 -t 30
 
 #### Resultados del escaneo:
 - **/index.html**
@@ -33,7 +33,7 @@ Se descubrió el siguiente comentario dejado por un desarrollador:
 
 ![commentJuan](img/msgIndex.png)
 
-Esto reveló dos posibles nombres de usuario del sistema; ```juan``` y ```camilo```
+Esto reveló dos posibles nombres de usuario del sistema: ```juan``` y ```camilo```
 
 ### Acceso Inicial
 Por lógica se procedió a realizar una entrada de fuerza bruta por SSH contra la cuenta de ```camilo```, utilizando *Hydra* y el diccionario *rockyou.txt*:
@@ -44,12 +44,11 @@ Por lógica se procedió a realizar una entrada de fuerza bruta por SSH contra l
 #### Credenciales Obtenidas:
 - **Usuario**: camilo
 - **Contraseña**: password1
-#### Conexión Remota Exitosa:<br>
-![SSH Connection](img/sshConnection)
+#### Conexión Remota Exitosa<br>
 
 ### Movimiento Lateral (```camilo > juan```)
 Siguiendo la pista del correo dejada en el comentario web, se inspeccionó el buzón local de correos en la ruta ```/var/mail/```:<br>
-![Mail](img/correo.png)
+![Mail](img/correoTxt.png)
 
 En el archivo se encontró una nota de ```juan``` indicando que saldría de vacaciones y dejando su contraseña:
 - **Usuario**: juan
