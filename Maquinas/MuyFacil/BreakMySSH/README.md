@@ -8,7 +8,7 @@
 Se ejecutó un escaneo completo de puertos TCP sobre el objetivo:
 
     $ nmap -p- --open -sS -sC -sV 172.17.0.2 -n -Pn
-![Nmap Scan](img/)
+![Nmap Scan](img/nmapScan.png)
 
 #### Puertos Descubiertos:
 - **22/tcp**: Único servicio expuesto en el sistema objetivo.
@@ -18,7 +18,7 @@ Al no existir superficie web u otros servicios auxiliares, se procedio a realiza
 bruta directa al servicio SSH contra la cuenta _**root**_ utilizando *Hydra* y el diccionario _**rockyou.txt**_:
 
     $ hydra -l root -P /usr/share/wordlists/rockyou.txt ssh://172.17.0.2 -t 16 -f -V
-![Hydra BruteForce](/img/hydraBFShot_trust.png)
+![Hydra BruteForce](img/hydraBruteF.png)
 
 ### Credenciales Obtenidas:
 - **Usuario**: root
@@ -29,7 +29,7 @@ Tras limpiar la entrada previa del host en ```~/.ssh/known_hosts```, se establec
 
     $ ssh root@172.17.0.2
 Validación de identidad dentro del contenedor:<br>
-![SSH Connection](img)
+![SSH Connection](img/sshConnection.png)
 
 No se requirió escalada adicional de privilegios debido a que las credenciales comprometidas correspondian
-directamente al superusuario.<br>![Flag](img/)
+directamente al superusuario.
