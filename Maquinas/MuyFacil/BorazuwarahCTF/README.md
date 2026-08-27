@@ -10,7 +10,7 @@ Se realizó un escaneo completo de puertos TCP sobre la máquina objetivo:
 
     $ nmap -p- --open -sS -sC -sV 172.17.0.2 -n -Pn
 
-![Nmap Scan](img/)
+![Nmap Scan](img/nmapScan.png)
 
 #### Puertos Descubiertos:
 - **22/tcp**
@@ -22,23 +22,23 @@ Se ejecutó un fuzzing sobre rutas y directorios mediante *Gobuster:*
 
     $ gobuster dir -u http://172.17.0.2 -w /usr/share/wordlists/directory-lists-2.3-small.txt -x php,html,txt,sh,py,bak,zip --exclude-length 10701
 
-![Gobuster Fuzzing](img/)
+![Gobuster Fuzzing](img/gobuster.png)
 
 #### Resultados:
 - ```/index.html``` (Status:200) &mdash; Página principal
 - ```/imagen.jpeg``` &mdash; archivo de imagen expuesto tras inspeccionar el index con ```curl```:
 
-![Curl Index](img/)
+![Curl Index](img/curl.png)
 
 ---
 ### Extracción de Metadatos e Información Oculta
 Se descargó la imagen a través de ```wget```:
 
-![wget](img/)
+![wget](img/wget.png)
 
 Se procedió a analizar los metadatos de dicha imagen con ```exiftool```:
 
-![exiftool.png](img/)
+![exiftool.png](img/exiftool.png)
 
 #### Resultado Obtenido:
 El análisis reveló el nombre del usuario válido incrustado en la información de la imagen:
@@ -50,7 +50,7 @@ Con el usuario identificado, se ejecutó una entrada de fuerza bruta con *Hydra*
 
     $ hydra -l borazuwarah -P /usr/share/wordlists/rockyou.txt ssh://172.17.0.2 -t 16 -f -V -I
 
-![hydraBruteF](img/)
+![hydraBruteF](img/hydraBruteF.png)
 
 #### Credenciales Obtenidas:
 - **Usuario:** ```borazuwarah```
@@ -62,11 +62,11 @@ Tras obtener las credenciales, se inició una conexión remota mediante SSH
 ### Escalada de Privilegios (```borazuwarah > root```)
 Una vez en el sistema, se listaron los privilegios ```sudo``` asignados al usuario:
 
-![SSH Connection](img/)
+![SSH Connection](img/sshConnection.png)
 
 #### Resultado:
 El usuario cuenta con permisos para ejecutar ```/bin/bash``` como superusuario sin requerir contraseña.
 
-![flag](img/)
+![flag](img/flag.png)
 
 Se ejecuta el comando ```sudo su /bin/bash``` y por último se confirma el acceso como administrador.
