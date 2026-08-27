@@ -1,4 +1,4 @@
-# Writeup: Obsession - Dockerlabs
+# Writeup: Obsession &mdash; Dockerlabs
 - **Dificultad**: Muy Facíl
 - **Plataforma**: Dockerlabs
 - **IP Objetivo**: 172.17.0.2
