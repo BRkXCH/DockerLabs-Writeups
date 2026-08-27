@@ -1,4 +1,4 @@
-# Writeup: BreakMySSH - Dockerlabs
+# Writeup: BreakMySSH &mdash; Dockerlabs
 - **Dificultad**: Muy Fácil
 - **Plataforma**: Dockerlabs
 - **IP Objetivo**: 172.17.0.2
