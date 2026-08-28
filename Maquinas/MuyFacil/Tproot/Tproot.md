@@ -12,7 +12,7 @@ Se envía una traza ICMP hacia la dirección IP asignada al contenedor para vali
 
 #### Salida Obtenida:
 
-![ping](img/)
+![ping](img/ping.png)
 
 **Nota de Análisis:** La respuesta exitosa con un TTL de 64 bytes confirma conectividad directa y sugiere que el sistema operativo subyacente es Linux.
 
@@ -22,7 +22,7 @@ Se realiza un escaneo exhaustivo sobre todo el rango de puertos TCP para identif
 
     $ nmap -p- -sS -sC -sV 172.17.0.2 -n -Pn
 
-![Nmap Scan](img/)
+![Nmap Scan](img/nmapScan.png)
 
 #### Puertos y Servicios Identificados:
 - **21/tcp** &mdash; ```(vsftpd 2.3.4)```
@@ -34,7 +34,7 @@ Se analiza el servicio HTTP detectado realizando una petición directa para insp
 
     $ curl -s http://172.17.0.2
 
-![Curl](img/)
+![Curl](img/page.png)
 
 #### Resultado de la Inspección
 - La respuesta arrojó la página HTML por defecto de Apache2 en Ubuntu
@@ -45,7 +45,7 @@ ___
 ### Enumeración del Servicio FTP (Puerto 21)
 Se evaluó la posibilidad de acceso no autenticado mediante el usuario ```anonymous``` y una contraseña vacía:
 
-![ftpConnection](img/)
+![ftpConnection](img/ftpConnection.png)
 
 #### Resultado Obtenido
 El inicio de sesión anónimo se encuentra deshabilitado, descartando la transferencia de archivos sin autenticación por esta vía.
@@ -56,7 +56,7 @@ Se ejecutó la categoría de scripts de vulnerabilidades de Nmap para contrastar
 
     $ nmap --scripts vuln 172.17.0.2 -p 21
 
-![Nmap Scan Vuln]
+![Nmap Scan Vuln](img/nmapScan01.png)
 
 #### Resultado Obtenido
 - **CVE-2011-2523**
@@ -81,7 +81,7 @@ Posteriormente, se estableció la conexión hacia el puerto alternativo habilita
     id
     # uid=0(root) gid=(root) groups=(root)
 
-![Flag](img/)
+![Flag](img/flag.png)
 
 #### Resultado
 Se confirmó la obtención de una shell interactiva con privilegios de superusuario, concluyendo el objetivo del laboratorio.
