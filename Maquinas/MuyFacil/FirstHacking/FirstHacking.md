@@ -23,8 +23,8 @@ ___
 ### Análisis y Causa Ráiz
 - **Vulnerabilidad detectada:** ```CVE-2011-2325```.
 - **Mecanismo:** La versión ```2.3.4``` de ```vsftpd``` contiene una backdoor histórica que se activa al enviar un nombre de usuario que contenga la secuencia ```:)```, abriendo automáticamente una shell interactiva como ```root``` en el puerto ```6200/tcp```.
--
-- ![Nmap Vuln](img/)
+
+![Nmap Vuln](img/nmapScan01.png)
 
 ___
 ### Verificación de Acceso
