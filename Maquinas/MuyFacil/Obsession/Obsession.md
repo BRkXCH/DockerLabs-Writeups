@@ -45,7 +45,7 @@ Al inspeccionar el contenido de los archivos descargados se identificó una conv
 ### Acceso Inicial
 Con los nombres de usuario extraidos de la enumeración de FTP, se ejecutó una entrada de fuerza bruta contra el servicio SSH por cada usuario utilizando *Hydra* y el diccionario *rockyou.txt*:
 
-    $ hydra -l mario -P /usr/share/wordlists/rockyou.txt ssh://172.17.0.2 -t 16 -f -V
+    $ hydra -l russoski -P /usr/share/wordlists/rockyou.txt ssh://172.17.0.2 -t 16 -f -V
 
 <p align="left">
   <img src="img/hydraBruteF.png" width="50%">
