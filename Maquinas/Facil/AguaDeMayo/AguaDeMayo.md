@@ -9,8 +9,7 @@ ___
 Se realizó un escaneo completo de puertos TCP sobre la máquina objetivo:
 
         $ nmap -p- --open -sS -sC -sV 172.17.0.2 -n -Pn
-
-    ![Nmap Scan](img/nmapScan.png)
+![Nmap Scan](img/nmapScan.png)
 
 #### Puertos descubiertos:
 - **22/tcp** &mdash; Servicio de administración remota
@@ -21,8 +20,7 @@ ___
 Se realizó una petición con ```curl``` hacia la raíz del servidor web para examinar la respuesta inicial:
 
         $ curl -s http://172.17.0.2/
-
-    ![Curl](img/curl.png)
+![Curl](img/curl.png)
 
 Al inspeccionar el final del código fuente de la página por defecto de Apache, se identificó un comentario que contenía una cadena codificada en lenguaje esotérico *Brainfuck*:
 
@@ -31,14 +29,12 @@ Al inspeccionar el final del código fuente de la página por defecto de Apache,
 Se procedió a decodificar la cadena utilizando una herramienta web, obteniendo el siguiente texto:
 
         bebeaguaqueessano
-
-    ![BrainFuck decode](img/decodeBrainFuck.png)
+![BrainFuck decode](img/decodeBrainFuck.png)
 
 De forma paralela, se llevó a cabo una fase de fuzzing de directorios mediante ```gobuster```:
 
         $ gobuster dir -u http://172.17.0.2/ -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -x php,html,txt,sh,py,bak --exclude-length 275
-
-    ![Gobuster](img/gobuster.png)
+![Gobuster](img/gobuster.png)
 
 #### Rutas descubiertas:
 - **/images/ (status: 301):** Directorio expuesto en el servidor web.
@@ -56,8 +52,7 @@ ___
 Utilizando las credenciales obtenidas, se estableció una sesión remota mediante SSH hacia la máquina objetivo:
 
         $ ssh agua@172.17.0.2
-
-    ![SSH Connection](img/sshConnection.png)
+![SSH Connection](img/sshConnection.png)
 
 Se confirmó el acceso inicial al sistema bajo el contexto del usuario ```agua```.
 
@@ -74,8 +69,7 @@ Al acceder a la interfaz interactiva de *Bettercap*, se aprovechó la funcionali
         $ sudo /usr/bin/bettercap
         $ bettercap>> ! chmod u+s /bin/bash
         $ bettercap>> ^C
-
-    ![Flag](img/flag.png)
+![Flag](img/flag.png)
 
 Una vez modificado el binario, se salió de *Bettercap* y se ejecutó ```bash``` en modo privilegiado para asumir los permisos efectivos de root:
 
